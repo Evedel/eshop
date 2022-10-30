@@ -1,0 +1,34 @@
+{
+	"name": "Existing Docker Compose (Extend)",
+	"dockerComposeFile": [
+		"../compose.yaml",
+		"compose-extend.yaml"
+	],
+	"service": "dev",
+	"workspaceFolder": "/workspace",
+	"settings": {
+		"terminal.integrated.defaultProfile.linux": "bash",
+		"python.pythonPath": "python",
+		"python.languageServer": "Pylance",
+		"python.linting.enabled": true,
+		"python.formatting.provider": "black",
+		"editor.formatOnSave": true,
+		"python.testing.unittestArgs": [
+			"-v",
+			"-s",
+			"/workspace/app",
+			"-p",
+			"test_*.py"
+		],
+		"python.testing.pytestEnabled": false,
+		"python.testing.unittestEnabled": true
+	},
+	"extensions": [
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"github.copilot",
+	],
+	"runServices": [
+		"dev"
+	]
+}

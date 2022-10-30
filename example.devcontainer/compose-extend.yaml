@@ -1,0 +1,6 @@
+version: '3'
+services:
+  dev:
+    volumes:
+      - .:/workspace:cached
+    entrypoint: "sleep infinity"

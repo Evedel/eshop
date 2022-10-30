@@ -1,0 +1,29 @@
+---
+version: "3.4"
+
+services:
+  base:
+    &base
+    build:
+      context: .
+    working_dir: /app
+    volumes:
+      - "./app:/app"
+      - "$HOME/.kube:/root/.kube"
+      - "$HOME/.aws:/root/.aws"
+
+  dev:
+    <<: *base
+    working_dir: /workspace
+    build:
+      context: .
+      target: dev
+    entrypoint: [ sh ]
+
+  python:
+    <<: *base
+    build:
+      context: .
+      target: prod
+    working_dir: /app
+    entrypoint: [ python ]
