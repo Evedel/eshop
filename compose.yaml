@@ -21,9 +21,8 @@ services:
     entrypoint: [ sh ]
 
   python:
-    <<: *base
     build:
       context: .
-      target: prod
+      target: dev
     working_dir: /app
     entrypoint: [ python ]
