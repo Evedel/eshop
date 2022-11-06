@@ -21,7 +21,6 @@ RUN apk add --no-cache -U bash jq git openssh curl
 WORKDIR /workspace
 RUN python -m pip install --upgrade pip && \
   pip install coverage black
-COPY . /workspace
 
 
 FROM ${PYTHON_IMAGE} as prod
