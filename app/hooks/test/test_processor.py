@@ -3,10 +3,7 @@ from unittest.mock import MagicMock
 
 from hooks.base.processor import (
     HookProcessor,
-    JsonWrapper,
-    OSWrapper,
-    PrintWrapper,
-    SysWrapper,
+    StdLibWrapper
 )
 
 
@@ -16,36 +13,31 @@ class TestHookProcessor(unittest.TestCase):
         config = "test-config"
         entrypoint = "test-entrypoint"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        print_wrapper = MagicMock(spec_set=PrintWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = True
+        std_lib.is_config.return_value = True
 
-        hook_processor = HookProcessor(sys=sys_wrapper, print=print_wrapper)
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Act
         hook_processor.execute(config, entrypoint)
 
         # Assert
-        print_wrapper.print.assert_called_once_with(config)
+        std_lib.print.assert_called_once_with(config)
 
     def test_execute_when_unknown_context_type(self):
         # Arrange
         config = "test-config"
         entrypoint = "test-entrypoint"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        json_wrapper = MagicMock(spec_set=JsonWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = False
+        std_lib.is_config.return_value = False
         context = self.__get_context_synchronization()
         context[0]["type"] = "Unknown"
-        json_wrapper.json_load.return_value = context
+        std_lib.json_load.return_value = context
 
-        hook_processor = HookProcessor(
-            sys=sys_wrapper,
-            json=json_wrapper,
-        )
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Assert (# Act)
         self.assertRaises(Exception, hook_processor.execute, config, entrypoint)
@@ -55,38 +47,29 @@ class TestHookProcessor(unittest.TestCase):
         config = "test-config"
         entrypoint = "test-entrypoint"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        json_wrapper = MagicMock(spec_set=JsonWrapper)
-        os_wrapper = MagicMock(spec_set=OSWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = False
+        std_lib.is_config.return_value = False
         context = self.__get_context_synchronization()
         context[0]["objects"] = []
-        json_wrapper.json_load.return_value = context
+        std_lib.json_load.return_value = context
 
-        hook_processor = HookProcessor(
-            sys=sys_wrapper,
-            json=json_wrapper,
-            os=os_wrapper,
-        )
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Act
         hook_processor.execute(config, entrypoint)
 
         # Assert
-        os_wrapper.sh.assert_not_called()
+        std_lib.sh.assert_not_called()
 
     def test_execute_when_synchronization_multiple_objects(self):
         # Arrange
         config = "test-config"
         entrypoint = "/app/test-entrypoint/script"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        json_wrapper = MagicMock(spec_set=JsonWrapper)
-        os_wrapper = MagicMock(spec_set=OSWrapper)
-        print_wrapper = MagicMock(spec_set=PrintWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = False
+        std_lib.is_config.return_value = False
         context = self.__get_context_synchronization()
         context[0]["objects"][0]["object"]["metadata"]["namespace"] = "test-namespace-1"
         context[0]["objects"][0]["object"]["metadata"]["name"] = "test-object-1"
@@ -94,14 +77,9 @@ class TestHookProcessor(unittest.TestCase):
         context[0]["objects"][1]["object"]["metadata"]["name"] = "test-object-2"
         context[0]["objects"][2]["object"]["metadata"]["namespace"] = "test-namespace-2"
         context[0]["objects"][2]["object"]["metadata"]["name"] = "test-object-3"
-        json_wrapper.json_load.return_value = context
+        std_lib.json_load.return_value = context
 
-        hook_processor = HookProcessor(
-            sys=sys_wrapper,
-            json=json_wrapper,
-            os=os_wrapper,
-            print=print_wrapper,
-        )
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Act
         hook_processor.execute(config, entrypoint)
@@ -113,8 +91,8 @@ class TestHookProcessor(unittest.TestCase):
         def gen_print_call(namespace: str, name: str) -> unittest.mock.call:
             return unittest.mock.call(f"--- Synchronization {namespace} {name}")
 
-        self.assertEqual(3, os_wrapper.sh.call_count)
-        os_wrapper.sh.assert_has_calls(
+        self.assertEqual(3, std_lib.sh.call_count)
+        std_lib.sh.assert_has_calls(
             [
                 gen_sh_call("test-namespace-1", "test-object-1"),
                 gen_sh_call("test-namespace-1", "test-object-2"),
@@ -122,8 +100,8 @@ class TestHookProcessor(unittest.TestCase):
             ]
         )
 
-        self.assertEqual(3, print_wrapper.print.call_count)
-        print_wrapper.print.assert_has_calls(
+        self.assertEqual(3, std_lib.print.call_count)
+        std_lib.print.assert_has_calls(
             [
                 gen_print_call("test-namespace-1", "test-object-1"),
                 gen_print_call("test-namespace-1", "test-object-2"),
@@ -136,29 +114,21 @@ class TestHookProcessor(unittest.TestCase):
         config = "test-config"
         entrypoint = "/app/test-entrypoint/script"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        json_wrapper = MagicMock(spec_set=JsonWrapper)
-        os_wrapper = MagicMock(spec_set=OSWrapper)
-        print_wrapper = MagicMock(spec_set=PrintWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = False
+        std_lib.is_config.return_value = False
         context = self.__get_context_event_single()
         context[0]["object"]["metadata"]["namespace"] = "test-namespace-1"
         context[0]["object"]["metadata"]["name"] = "test-object-1"
-        json_wrapper.json_load.return_value = context
+        std_lib.json_load.return_value = context
 
-        hook_processor = HookProcessor(
-            sys=sys_wrapper,
-            json=json_wrapper,
-            os=os_wrapper,
-            print=print_wrapper,
-        )
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Act
         hook_processor.execute(config, entrypoint)
 
         # Assert
-        os_wrapper.sh.assert_has_calls(
+        std_lib.sh.assert_has_calls(
             [
                 unittest.mock.call(
                     "/app/test-entrypoint/script test-namespace-1 test-object-1"
@@ -166,7 +136,7 @@ class TestHookProcessor(unittest.TestCase):
             ]
         )
 
-        print_wrapper.print.assert_has_calls(
+        std_lib.print.assert_has_calls(
             [
                 unittest.mock.call("--- Event test-namespace-1 test-object-1"),
             ]
@@ -177,12 +147,9 @@ class TestHookProcessor(unittest.TestCase):
         config = "test-config"
         entrypoint = "/app/test-entrypoint/script"
 
-        sys_wrapper = MagicMock(spec_set=SysWrapper)
-        json_wrapper = MagicMock(spec_set=JsonWrapper)
-        os_wrapper = MagicMock(spec_set=OSWrapper)
-        print_wrapper = MagicMock(spec_set=PrintWrapper)
+        std_lib = MagicMock(spec_set=StdLibWrapper)
 
-        sys_wrapper.is_config.return_value = False
+        std_lib.is_config.return_value = False
         context = self.__get_context_event_multiple()
         context[0]["object"]["metadata"]["namespace"] = "test-namespace-1"
         context[0]["object"]["metadata"]["name"] = "test-object-1"
@@ -190,14 +157,9 @@ class TestHookProcessor(unittest.TestCase):
         context[1]["object"]["metadata"]["name"] = "test-object-2"
         context[2]["object"]["metadata"]["namespace"] = "test-namespace-1"
         context[2]["object"]["metadata"]["name"] = "test-object-2"
-        json_wrapper.json_load.return_value = context
+        std_lib.json_load.return_value = context
 
-        hook_processor = HookProcessor(
-            sys=sys_wrapper,
-            json=json_wrapper,
-            os=os_wrapper,
-            print=print_wrapper,
-        )
+        hook_processor = HookProcessor(std_lib=std_lib)
 
         # Act
         hook_processor.execute(config, entrypoint)
@@ -209,8 +171,8 @@ class TestHookProcessor(unittest.TestCase):
         def gen_print_call(namespace: str, name: str) -> unittest.mock.call:
             return unittest.mock.call(f"--- Event {namespace} {name}")
 
-        self.assertEqual(3, os_wrapper.sh.call_count)
-        os_wrapper.sh.assert_has_calls(
+        self.assertEqual(3, std_lib.sh.call_count)
+        std_lib.sh.assert_has_calls(
             [
                 gen_sh_call("test-namespace-1", "test-object-1"),
                 gen_sh_call("test-namespace-2", "test-object-2"),
@@ -218,8 +180,8 @@ class TestHookProcessor(unittest.TestCase):
             ]
         )
 
-        self.assertEqual(3, print_wrapper.print.call_count)
-        print_wrapper.print.assert_has_calls(
+        self.assertEqual(3, std_lib.print.call_count)
+        std_lib.print.assert_has_calls(
             [
                 gen_print_call("test-namespace-1", "test-object-1"),
                 gen_print_call("test-namespace-2", "test-object-2"),
