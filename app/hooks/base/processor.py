@@ -1,28 +1,20 @@
-class OSWrapper:  # pragma: no cover
+class StdLibWrapper:  # pragma: no cover
     def sh(self, command: str) -> None:
-        import os
+        import subprocess
 
-        os.system(command)
+        if subprocess.run(command).returncode != 0:
+            raise Exception(f"command failed: {command}")
 
     def env(self, key: str) -> str:
         import os
 
         return os.environ[key]
 
-
-class SysWrapper:  # pragma: no cover
-    def is_config(self) -> None:
+    def is_config(self) -> bool:
         import sys
 
         return len(sys.argv) > 1 and sys.argv[1] == "--config"
 
-
-class PrintWrapper:  # pragma: no cover
-    def print(self, message: str) -> None:
-        print(message)
-
-
-class JsonWrapper:  # pragma: no cover
     def json_load(self, path: str) -> dict:
         import json
 
@@ -30,20 +22,20 @@ class JsonWrapper:  # pragma: no cover
         print(context)
         return context
 
+    def print(self, message: str) -> None:
+        print(message)
+
 
 class HookProcessor:
     def __init__(
         self,
-        os: OSWrapper = OSWrapper(),
-        sys: SysWrapper = SysWrapper(),
-        print: PrintWrapper = PrintWrapper(),
-        json: JsonWrapper = JsonWrapper(),
+        std_lib: StdLibWrapper = StdLibWrapper(),
     ):
-        self.__sh = os.sh
-        self.__is_config = sys.is_config
-        self.__print = print.print
-        self.__json_load = json.json_load
-        self.__env = os.env
+        self.__sh = std_lib.sh
+        self.__is_config = std_lib.is_config
+        self.__print = std_lib.print
+        self.__json_load = std_lib.json_load
+        self.__env = std_lib.env
 
     def __on_synchronization(self, context: dict, entrypoint: str) -> None:
         for obj in context["objects"]:
